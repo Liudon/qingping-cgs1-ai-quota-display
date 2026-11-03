@@ -2,6 +2,8 @@
 
 这个项目在青萍 CGS1 上展示 AI 订阅额度。当前采集器支持 **Codex** 和 **OpenCode GO**：Mac 负责读取额度并保管授权信息，青萍读取 JSON 并显示。
 
+<p align="center"><img src="assets/ai-quota-display.jpg" alt="青萍 CGS1 展示 AI 订阅额度" width="520"></p>
+
 ## 运行方式
 
 额度服务始终在 Mac 上提供局域网 HTTP 接口。可选开启 VPS 发布，让 Mac 定时把同一份 JSON 上传到网站静态目录。
