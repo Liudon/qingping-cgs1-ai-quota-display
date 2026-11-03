@@ -1,0 +1,18 @@
+{
+  "host": "0.0.0.0",
+  "port": 8766,
+  "poll_seconds": 60,
+  "stale_after_seconds": 180,
+  "device_refresh_seconds": 300,
+  "codex_bin": "~/.local/bin/codex",
+  "codex_home": "",
+  "pi_auth_file": "~/.pi/agent/auth.json",
+  "cache_file": "runtime/quotas.json",
+  "publish": {
+    "enabled": false,
+    "ssh_host": "my-vps",
+    "remote_path": "/var/www/example.com/quota.json",
+    "interval_seconds": 60,
+    "timeout_seconds": 20
+  }
+}

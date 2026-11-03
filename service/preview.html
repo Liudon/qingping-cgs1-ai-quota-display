@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 订阅额度</title>
+<style>
+body{margin:0;background:#10171d;color:#f3f6f7;font:16px system-ui,sans-serif}main{max-width:640px;margin:40px auto;padding:20px}h1{font-size:26px}article{background:#1c2730;padding:24px;border-radius:18px;margin:18px 0}h2{margin:0 0 6px;font-size:24px}small,footer{color:#9daebc}.row{margin-top:22px}.line{display:flex;justify-content:space-between;gap:15px}.label{overflow-wrap:anywhere}progress{width:100%;height:8px;accent-color:#67d6a4}article.stale{opacity:.65}.warn{color:#ffbe6b}footer{margin-top:24px}
+</style><main><h1>AI 订阅额度 <small>剩余</small></h1><div id="cards"></div><footer id="status">正在连接…</footer></main>
+<script>
+let last=null, offline=false;
+const cards=document.querySelector('#cards'), status=document.querySelector('#status');
+function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e}
+function render(){
+ if(!last)return;
+ cards.replaceChildren();
+ for(const p of last.providers){
+  const stale=offline||p.status!=='ok'||Date.now()/1000-p.updated_at>last.stale_after_seconds||p.windows.some(w=>w.resets_at&&w.resets_at<Date.now()/1000);
+  const a=el('article',undefined,stale?'stale':'');a.append(el('h2',p.name));
+  a.append(el('small',stale?(p.message||'数据已过期'):'已同步'));
+  for(const w of p.windows){const row=el('div',undefined,'row'),line=el('div',undefined,'line');line.append(el('span',w.label,'label'),el('strong',w.remaining_percent+'%'));row.append(line);const bar=el('progress');bar.max=100;bar.value=w.remaining_percent;if(w.remaining_percent<20)bar.style.accentColor='#ffbe6b';row.append(bar,el('small',w.resets_at?'重置：'+new Date(w.resets_at*1000).toLocaleString('zh-CN'):'重置时间未知'));a.append(row)}
+  cards.append(a);
+ }
+ status.textContent=(offline?'服务连接中断 · ':'')+'最近响应：'+new Date(last.generated_at*1000).toLocaleTimeString('zh-CN');
+}
+async function refresh(){try{const r=await fetch('/api/v1/quotas',{signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error();last=await r.json();offline=false}catch(e){offline=true;status.textContent='无法连接服务'}render()}
+refresh();setInterval(refresh,30000);setInterval(render,10000);
+</script></html>

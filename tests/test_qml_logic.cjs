@@ -1,0 +1,33 @@
+// QML 共享 JS 的边界行为；不依赖设备或 Qt，不代替设备端渲染验收。
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const q = {};
+vm.createContext(q);
+vm.runInContext(fs.readFileSync('qml/Quota.js', 'utf8').replace('.pragma library', ''), q);
+const window = {label:'每周', remaining_percent:78, resets_at:2000};
+const provider = {id:'codex',name:'Codex',message:'',status:'ok',updated_at:1000,windows:[window]};
+const data = {schema_version:1,generated_at:1000,stale_after_seconds:180,providers:[provider,{...provider,id:'opencode-go'}]};
+assert.equal(q.validate(data), true);
+assert.equal(q.validate({...data,schema_version:2}), false);
+assert.equal(q.validate({...data,providers:[provider,provider]}), false);
+assert.equal(q.validate({...data,providers:[{...provider,windows:[{...window,remaining_percent:NaN}]},data.providers[1]]}), false);
+assert.equal(q.stale(provider,1100,180,false), false);
+assert.equal(q.stale(provider,1181,180,false), true);
+assert.equal(q.stale(provider,1100,180,true), true);
+assert.equal(q.stale({...provider,windows:[{...window,resets_at:1100}]},1100,180,false), true);
+assert.equal(q.resetLabel(1000,1001), '等待额度刷新');
+assert.equal(q.resetLabel(null,1001), '重置时间未知');
+assert.equal(q.color(9,false),'#f27d83');
+assert.equal(q.color(19,false),'#f5bc67');
+assert.equal(q.color(80,true),'#82909c');
+assert.equal(q.visibleWindows({...provider,windows:[1,2,3,4]},0).length,3);
+assert.equal(q.visibleWindows({...provider,windows:[1,2,3,4]},1)[0],4);
+assert.equal(q.responseTime('Thu, 01 Jan 1970 00:20:00 GMT','0',999,1000),1200);
+assert.equal(q.responseTime('Thu, 01 Jan 1970 00:20:00 GMT','90',999,1000),1290);
+assert.equal(q.responseTime('Thu, 01 Jan 1970 00:20:00 GMT','0',999,1300),1300);
+assert.equal(q.responseTime('', '', 1500, 1400),1500);
+// 读取同一份静态 JSON，HTTP Date 仍前进，最终进入过期状态。
+assert.equal(q.stale(provider,q.responseTime('Thu, 01 Jan 1970 00:25:00 GMT','0',999,1200),180,false),true);
+assert.equal(q.requestUrl('https://example.com/quota.json',123),'https://example.com/quota.json?_quota_t=123');
+console.log('QML 共享逻辑：21 项检查通过');
