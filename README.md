@@ -41,7 +41,7 @@
 首次设置时复制示例文件，然后按需编辑：
 
 ```sh
-cd ~/Code/qingping-csg1-ai-quota-display
+cd ~/Code/qingping-cgs1-ai-quota-display
 cp config.example.json config.json  # 仅首次执行；已有配置不要覆盖
 ```
 
